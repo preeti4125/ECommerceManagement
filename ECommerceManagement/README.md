@@ -1,19 +1,15 @@
 ﻿# E-Commerce Management System
 
-A console-based application built using C#, .NET, and ADO.NET with SQL Server LocalDB.
+A console application built with C#, .NET 10, and ADO.NET connecting to SQL Server LocalDB.
 
 ## Features
-- Pure ADO.NET data access (SqlConnection, SqlCommand, SqlDataReader, SqlTransaction)
-- Layered architecture: Models, Repositories, Services, and Helpers
-- Atomic transactions: Order creation, stock deduction, and audit logging commit together
-- Parameterized queries for SQL injection prevention
+- Pure ADO.NET using `Microsoft.Data.SqlClient`
+- Category, Product, and Customer Management
+- Atomic multi-table transactions (Orders + OrderItems + Stock deduction + Audit logs)
+- Sales and customer reporting queries
 
-## Database Setup
-1. Open SQL Server Management Studio (SSMS).
-2. Connect to `(localdb)\mssqllocaldb`.
-3. Create database `ECommerceDB` and run table setup scripts.
-
-## How to Run
-1. Open the project in Visual Studio.
-2. Ensure connection string points to `(localdb)\mssqllocaldb`.
-3. Press `F5` to build and run.
+## Setup
+1. Create `ECommerceDB` in SQL Server (`(localdb)\mssqllocaldb`).
+2. Run database schema scripts.
+3. Update connection string in `DatabaseHelper.cs` if needed.
+4. Press F5 in Visual Studio to build and run.
