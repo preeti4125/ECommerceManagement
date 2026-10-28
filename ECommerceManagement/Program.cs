@@ -15,18 +15,21 @@ var orderService = new OrderService(orderRepo, productRepo);
 
 while (true)
 {
+    Console.Clear();
     Console.WriteLine("""
     ========================================
           ECOMMERCE MANAGEMENT SYSTEM       
     ========================================
     1. Products: List All
     2. Products: Add New
-    3. Customers: List All
-    4. Customers: Register New
-    5. Orders: Place Order (Transaction Demo)
-    6. Reports: Product Sales & Revenue
-    7. Reports: Inactive Customers (0 Orders)
-    8. Audit: View Recent Logs
+    3. Products: Search by Keyword
+    4. Products: Low Stock Alerts (< 10)
+    5. Customers: List All
+    6. Customers: Register New
+    7. Orders: Place Order (Transaction Demo)
+    8. Reports: Product Sales & Revenue
+    9. Reports: Inactive Customers (0 Orders)
+    10. Audit: View Recent Logs
     0. Exit
     ========================================
     """);
@@ -69,6 +72,40 @@ while (true)
                 break;
 
             case "3":
+                Console.Write("\nEnter search keyword: ");
+                string keyword = Console.ReadLine() ?? "";
+                var matched = await productService.SearchProductsAsync(keyword);
+
+                Console.WriteLine($"\n{"ID",-5} | {"Product",-32} | {"Category",-15} | {"Price",-8} | {"Stock",-6}");
+                Console.WriteLine(new string('-', 72));
+                foreach (var p in matched)
+                {
+                    Console.WriteLine($"{p.ProductId,-5} | {p.ProductName,-32} | {p.CategoryName,-15} | ${p.Price,-7:F2} | {p.StockQuantity,-6}");
+                }
+                break;
+
+            case "4":
+                var lowStock = await productService.GetLowStockAlertsAsync(10);
+                Console.WriteLine("\n--- LOW STOCK ALERTS (Threshold < 10) ---");
+                Console.WriteLine($"{"ID",-5} | {"Product",-32} | {"Category",-15} | {"Stock Remaining",-15}");
+                Console.WriteLine(new string('-', 72));
+
+                if (lowStock.Count == 0)
+                {
+                    Console.WriteLine("All products have adequate stock levels.");
+                }
+                else
+                {
+                    foreach (var p in lowStock)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        Console.WriteLine($"{p.ProductId,-5} | {p.ProductName,-32} | {p.CategoryName,-15} | {p.StockQuantity,-15}");
+                        Console.ResetColor();
+                    }
+                }
+                break;
+
+            case "5":
                 var customers = await customerService.GetAllCustomersAsync();
                 Console.WriteLine($"\n{"ID",-5} | {"Full Name",-20} | {"Email",-28} | {"Phone",-15}");
                 Console.WriteLine(new string('-', 75));
@@ -78,7 +115,7 @@ while (true)
                 }
                 break;
 
-            case "4":
+            case "6":
                 Console.Write("\nFull Name: ");
                 string custName = Console.ReadLine() ?? "";
                 Console.Write("Email: ");
@@ -99,7 +136,7 @@ while (true)
                 Console.WriteLine($"\nSuccess! Customer registered with ID: {newCustId}");
                 break;
 
-            case "5":
+            case "7":
                 Console.Write("\nCustomer ID: ");
                 int cId = int.Parse(Console.ReadLine() ?? "0");
                 Console.Write("Product ID: ");
@@ -111,16 +148,16 @@ while (true)
                 Console.WriteLine($"\nSuccess! Order #{orderId} processed atomically with stock deduction and audit record.");
                 break;
 
-            case "6":
+            case "8":
                 await reportRepo.PrintProductSalesReportAsync();
                 break;
 
-            case "7":
+            case "9":
                 await reportRepo.PrintInactiveCustomersReportAsync();
                 break;
 
-            case "8":
-                var logs = await auditRepo.GetRecentLogsAsync(5);
+            case "10":
+                var logs = await auditRepo.GetRecentLogsAsync(10);
                 Console.WriteLine($"\n{"ID",-5} | {"Entity",-8} | {"Action",-8} | {"Time",-20} | Details");
                 Console.WriteLine(new string('-', 80));
                 foreach (var log in logs)

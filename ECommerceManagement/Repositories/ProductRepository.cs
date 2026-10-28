@@ -57,7 +57,73 @@ public class ProductRepository
         }
         return list;
     }
+    // Search products by name (case-insensitive partial match)
+    public async Task<List<Product>> SearchByNameAsync(string keyword)
+    {
+        const string sql = """
+            SELECT p.ProductId, p.ProductName, p.Price, p.StockQuantity, p.CategoryId, p.IsActive, c.CategoryName
+            FROM Products p
+            INNER JOIN Categories c ON p.CategoryId = c.CategoryId
+            WHERE p.ProductName LIKE @Keyword
+            ORDER BY p.ProductName;
+            """;
 
+        var list = new List<Product>();
+        await using SqlConnection conn = DatabaseHelper.CreateConnection();
+        await using SqlCommand cmd = new(sql, conn);
+        cmd.Parameters.Add("@Keyword", SqlDbType.NVarChar, 150).Value = $"%{keyword}%";
+
+        await conn.OpenAsync();
+        await using SqlDataReader reader = await cmd.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            list.Add(new Product
+            {
+                ProductId = reader.GetInt32(0),
+                ProductName = reader.GetString(1),
+                Price = reader.GetDecimal(2),
+                StockQuantity = reader.GetInt32(3),
+                CategoryId = reader.GetInt32(4),
+                IsActive = reader.GetBoolean(5),
+                CategoryName = reader.GetString(6)
+            });
+        }
+        return list;
+    }
+
+    // Low-stock reorder alert query
+    public async Task<List<Product>> GetLowStockProductsAsync(int threshold = 10)
+    {
+        const string sql = """
+            SELECT p.ProductId, p.ProductName, p.Price, p.StockQuantity, p.CategoryId, p.IsActive, c.CategoryName
+            FROM Products p
+            INNER JOIN Categories c ON p.CategoryId = c.CategoryId
+            WHERE p.StockQuantity < @Threshold AND p.IsActive = 1
+            ORDER BY p.StockQuantity ASC;
+            """;
+
+        var list = new List<Product>();
+        await using SqlConnection conn = DatabaseHelper.CreateConnection();
+        await using SqlCommand cmd = new(sql, conn);
+        cmd.Parameters.Add("@Threshold", SqlDbType.Int).Value = threshold;
+
+        await conn.OpenAsync();
+        await using SqlDataReader reader = await cmd.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            list.Add(new Product
+            {
+                ProductId = reader.GetInt32(0),
+                ProductName = reader.GetString(1),
+                Price = reader.GetDecimal(2),
+                StockQuantity = reader.GetInt32(3),
+                CategoryId = reader.GetInt32(4),
+                IsActive = reader.GetBoolean(5),
+                CategoryName = reader.GetString(6)
+            });
+        }
+        return list;
+    }
     public async Task<Product?> GetByIdAsync(int productId)
     {
         const string sql = "SELECT ProductId, ProductName, Price, StockQuantity, CategoryId, IsActive FROM Products WHERE ProductId = @ProductId;";

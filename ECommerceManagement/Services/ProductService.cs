@@ -28,4 +28,16 @@ public class ProductService
 
     public Task<List<Product>> GetAllAsync() => _repository.GetAllWithCategoryAsync();
     public Task<Product?> GetByIdAsync(int id) => _repository.GetByIdAsync(id);
+    public Task<List<Product>> SearchProductsAsync(string keyword)
+    {
+        if (string.IsNullOrWhiteSpace(keyword))
+            return _repository.GetAllWithCategoryAsync();
+
+        return _repository.SearchByNameAsync(keyword.Trim());
+    }
+
+    public Task<List<Product>> GetLowStockAlertsAsync(int threshold = 10)
+    {
+        return _repository.GetLowStockProductsAsync(threshold);
+    }
 }
